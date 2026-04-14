@@ -1885,7 +1885,7 @@
   }
 
   async function deleteReview(id) {
-    try { await sbFetch('DELETE', 'reviews?id=eq.' + id, null); } catch(e) {}
+    try { await sbFetch('DELETE', 'reviews?id=eq.' + encodeURIComponent(id), null); } catch(e) { console.error('Delete error:', e); }
   }
 
   // ── MAILCHIMP INTEGRATION ──
@@ -2074,7 +2074,7 @@
       render();
       setTimeout(async () => {
         await deleteReview(id);
-        state.testimonials = state.testimonials.filter(t => t.id !== id);
+        state.testimonials = state.testimonials.filter(t => String(t.id) !== String(id));
         state.deletingId = null;
         render();
       }, 400);
