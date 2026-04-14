@@ -1932,7 +1932,6 @@
     const hasMore = !state.showAll && all.length > VISIBLE_COUNT;
     const cards = visible.map(t => `
       <div class="t-card ${state.deletingId===t.id?'deleting':''}" data-id="${t.id}">
-        <div class="t-stars">★★★★★</div>
         <div class="t-text">"${t.text}"</div>
         <div class="t-footer">
           <div class="t-line"></div>
