@@ -1840,56 +1840,72 @@
     }
   });
   const ADMIN_PW = 'nicole2024';
-
-  const INITIAL = [
-    { id: 'demo1', name: 'Sofia M.', text: 'I came to Nicole feeling completely lost about my career. Within minutes she was describing exactly what I had been feeling internally but couldn\'t articulate. The guidance from my higher self was so precise it moved me to tears. I\'ve listened back to the recording three times now.', date: 'March 2025' },
-    { id: 'demo2', name: 'Lena K.', text: 'Nicole picked up on a number I had been seeing everywhere and explained exactly what it meant for where I am right now. I left with total clarity on my next steps. She sees things you haven\'t said out loud — and somehow that\'s exactly what you needed to hear.', date: 'February 2025' }
-  ];
+  const SUPABASE_URL = 'https://huozxsjhkzvmxknhljmp.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1b3p4c2poa3p2bXhrbmhsam1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNTA0MDYsImV4cCI6MjA5MTcyNjQwNn0.JHVFHwvKJUFAINR1nFNaTnHhaOo5byd-ZnuoV9olEHE';
 
   const VISIBLE_COUNT = 3;
-  let state = { view: 'public', testimonials: [], submitted: false, adminUnlocked: false, adminInput: '', adminError: '', deletingId: null, showAll: false };
+  let state = { view: 'public', testimonials: [], submitted: false, adminUnlocked: false, adminInput: '', adminError: '', deletingId: null, showAll: false, loading: true };
 
-  // ── MAILCHIMP INTEGRATION ──
-  // Replace these values once you have your Mailchimp account set up
-  const MAILCHIMP_API_KEY = 'YOUR_API_KEY_HERE';
-  const MAILCHIMP_AUDIENCE_ID = 'YOUR_AUDIENCE_ID_HERE';
-  const MAILCHIMP_SERVER = 'YOUR_SERVER_PREFIX_HERE'; // e.g. 'us21'
-
-  async function subscribeToMailchimp(email, name) {
-    if (MAILCHIMP_API_KEY === 'YOUR_API_KEY_HERE') return; // not yet configured
-    const firstName = name.split(' ')[0] || name;
-    try {
-      await fetch(`https://${MAILCHIMP_SERVER}.api.mailchimp.com/3.0/lists/${MAILCHIMP_AUDIENCE_ID}/members`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `apikey ${MAILCHIMP_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email_address: email,
-          status: 'subscribed',
-          merge_fields: { FNAME: firstName }
-        })
-      });
-    } catch(e) {
-      console.log('Mailchimp subscribe failed:', e);
-    }
+  async function sbFetch(method, path, body) {
+    const res = await fetch('https://huozxsjhkzvmxknhljmp.supabase.co/rest/v1/' + path, {
+      method,
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1b3p4c2poa3p2bXhrbmhsam1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNTA0MDYsImV4cCI6MjA5MTcyNjQwNn0.JHVFHwvKJUFAINR1nFNaTnHhaOo5byd-ZnuoV9olEHE',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1b3p4c2poa3p2bXhrbmhsam1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNTA0MDYsImV4cCI6MjA5MTcyNjQwNn0.JHVFHwvKJUFAINR1nFNaTnHhaOo5byd-ZnuoV9olEHE',
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : ''
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (method === 'DELETE') return null;
+    return res.json();
   }
 
   async function load() {
     try {
-      const r = await window.storage.get('ns_testimonials_v2');
-      state.testimonials = r ? JSON.parse(r.value) : INITIAL;
-      if (!r) await window.storage.set('ns_testimonials_v2', JSON.stringify(INITIAL));
-    } catch { state.testimonials = INITIAL; }
+      const data = await sbFetch('GET', 'reviews?select=*&order=created_at.desc', null);
+      state.testimonials = Array.isArray(data) ? data.map(r => ({
+        id: r.id, name: r.name, text: r.text, email: r.email, consented: r.consented, date: r.date
+      })) : [];
+    } catch(e) {
+      state.testimonials = [];
+    }
+    state.loading = false;
     render();
   }
 
-  async function save() {
-    try { await window.storage.set('ns_testimonials_v2', JSON.stringify(state.testimonials)); } catch(e) {}
+  async function save(review) {
+    try {
+      const data = await sbFetch('POST', 'reviews', {
+        name: review.name, text: review.text,
+        email: review.email || null, consented: review.consented || false, date: review.date
+      });
+      return Array.isArray(data) ? data[0] : null;
+    } catch(e) { return null; }
   }
 
-  function render() {
+  async function deleteReview(id) {
+    try { await sbFetch('DELETE', 'reviews?id=eq.' + id, null); } catch(e) {}
+  }
+
+  // ── MAILCHIMP INTEGRATION ──
+  const MAILCHIMP_API_KEY = 'YOUR_API_KEY_HERE';
+  const MAILCHIMP_AUDIENCE_ID = 'YOUR_AUDIENCE_ID_HERE';
+  const MAILCHIMP_SERVER = 'YOUR_SERVER_PREFIX_HERE';
+
+  async function subscribeToMailchimp(email, name) {
+    if (MAILCHIMP_API_KEY === 'YOUR_API_KEY_HERE') return;
+    const firstName = name.split(' ')[0] || name;
+    try {
+      await fetch(`https://${MAILCHIMP_SERVER}.api.mailchimp.com/3.0/lists/${MAILCHIMP_AUDIENCE_ID}/members`, {
+        method: 'POST',
+        headers: { 'Authorization': `apikey ${MAILCHIMP_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_address: email, status: 'subscribed', merge_fields: { FNAME: firstName } })
+      });
+    } catch(e) {}
+  }
+
+    function render() {
     const el = document.getElementById('testimonials-widget');
     const views = {
       public: renderPublic,
@@ -1910,6 +1926,7 @@
   }
 
   function renderPublic() {
+    if (state.loading) return renderNav() + '<div class="t-empty" style="color:var(--light-mid);">Loading reviews...</div>';
     const all = state.testimonials;
     const visible = state.showAll ? all : all.slice(0, VISIBLE_COUNT);
     const hasMore = !state.showAll && all.length > VISIBLE_COUNT;
@@ -2013,9 +2030,13 @@
       const email = document.getElementById('t-email') ? document.getElementById('t-email').value.trim() : '';
       const consent = document.getElementById('t-consent') ? document.getElementById('t-consent').checked : false;
       if (!n || !t) return;
-      state.testimonials.unshift({ id: Date.now().toString(), name: n, text: t, email: email, consented: consent, date: new Date().toLocaleDateString('en-GB', { month:'long', year:'numeric' }) });
-      await save();
-      // Auto-subscribe to Mailchimp if email provided and consent given
+      sub.disabled = true;
+      sub.textContent = 'Submitting...';
+      const date = new Date().toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+      const saved = await save({ name: n, text: t, email, consented: consent, date });
+      if (saved) {
+        state.testimonials.unshift({ id: saved.id, name: n, text: t, email, consented: consent, date });
+      }
       if (email && consent) {
         await subscribeToMailchimp(email, n);
       }
@@ -2052,9 +2073,10 @@
       state.deletingId = id;
       render();
       setTimeout(async () => {
+        await deleteReview(id);
         state.testimonials = state.testimonials.filter(t => t.id !== id);
         state.deletingId = null;
-        await save(); render();
+        render();
       }, 400);
     }));
   }
