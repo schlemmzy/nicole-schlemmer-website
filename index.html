@@ -1031,11 +1031,96 @@
   .hero-actions { animation: fadeUp 0.6s 0.3s ease both; }
 
   /* ── RESPONSIVE ── */
+  /* ── HAMBURGER ── */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 24px;
+    height: 1.5px;
+    background: var(--charcoal);
+    transition: all 0.3s;
+  }
+
+  /* ── MOBILE MENU ── */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    background: var(--warm-white);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-menu.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .mobile-menu ul {
+    list-style: none;
+    text-align: center;
+  }
+
+  .mobile-menu-link {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--charcoal);
+    text-decoration: none;
+    padding: 16px 0;
+    transition: color 0.2s;
+  }
+
+  .mobile-menu-link:hover { color: var(--terra); }
+
+  .mobile-menu-cta {
+    font-style: normal;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--terra);
+    margin-top: 16px;
+    border: 1px solid var(--terra);
+    padding: 14px 32px;
+  }
+
+  .mobile-menu-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--mid);
+    cursor: pointer;
+    font-family: 'Jost', sans-serif;
+  }
+
   @media (max-width: 900px) {
 
     /* ── NAV ── */
     nav { padding: 14px 20px; }
     .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
     .nav-name { font-size: 15px; }
 
     /* ── HERO ── */
@@ -1446,6 +1531,9 @@
     <li><a href="#testimonials">Reviews</a></li>
     <li><a href="https://wa.me/4915221387735" target="_blank" class="nav-cta">Book a reading</a></li>
   </ul>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <!-- HERO -->
@@ -1480,8 +1568,8 @@
       <h2 class="section-title">Grounded guidance.<br><em>Soul-level clarity.</em></h2>
       <div class="section-divider"></div>
       <div class="what-body">
-        <p>I'm Nicole — a psychic channel. In a reading with me, I connect with your higher self, your spirit guides, and the universe to bring through the specific messages and guidance that are meant for you right now.</p>
-        <p>This isn't fortune telling. It's about clarity — what your soul is calling for, what direction feels aligned, and what your higher self and guides are ready to show you. Think of it as depth psychology meets the spiritual: grounded, honest, and rooted in who you actually are.</p>
+        <p>I'm Nicole, a psychic channel. In a reading with me, I connect with your higher self, your spirit guides, and the universe to bring through the specific messages and guidance meant for you right now.</p>
+        <p>This isn't fortune telling. It's about clarity: what your soul is calling for, what direction feels aligned, and what your higher self and guides are ready to show you. Think of it as depth psychology meets the spiritual: grounded, honest, and rooted in who you actually are.</p>
         <p>You don't need to be spiritual to hear it. You just need someone to help you tune in.</p>
       </div>
     </div>
@@ -1520,14 +1608,14 @@
       </div>
       <h2 class="section-title">What is the<br><em>higher self?</em></h2>
       <div class="section-divider"></div>
-      <p>Your higher self is truly you. It is who you are at your core — your essence, unclouded by fear, by ego, by the noise of everyday life. It is you with all the love you have for yourself. The most honest, most loving, most clear version of you that exists.</p>
-      <p>This part of you can see around the corner. While you navigate daily life from where you stand — with its uncertainty, its doubt, its competing voices — your higher self already sees a few steps ahead. It knows what's waiting for you down the path you can't yet see.</p>
+      <p>Your higher self is truly you. It is who you are at your core. Your essence, unclouded by fear, by ego, by the noise of everyday life. It is you with all the love you have for yourself. The most honest, most loving, most clear version of you that exists.</p>
+      <p>This part of you can see around the corner. While you navigate daily life from where you stand, with its uncertainty, its doubt, its competing voices, your higher self already sees a few steps ahead. It knows what's waiting for you down the path you can't yet see.</p>
       <p>It communicates with you constantly. Not through words, but through your emotions. When something excites you — truly, unexpectedly lights you up — that's your higher self pointing. There's something there for you. Something to discover, somewhere you need to be.</p>
       <p>That feeling isn't random. It's guidance. Most of us have just forgotten how to listen to it.</p>
     </div>
     <div class="hs-visual">
       <div class="hs-big-star">✦</div>
-      <div class="hs-quote">"Your higher self can see around the corner. It already knows what's waiting for you — even when you can't yet see it yourself."</div>
+      <div class="hs-quote">"Your higher self can see around the corner. It already knows what's waiting for you, even when you can't yet see it yourself."</div>
     </div>
   </div>
 </section>
@@ -1551,17 +1639,17 @@
       <div class="channel-card">
         <div class="channel-num">02</div>
         <div class="channel-title">Words & sentences</div>
-        <div class="channel-text">I can hear single words, phrases, or full sentences — direct messages meant for you.</div>
+        <div class="channel-text">I can hear single words, phrases, or full sentences. Direct messages meant for you.</div>
       </div>
       <div class="channel-card">
         <div class="channel-num">03</div>
         <div class="channel-title">Emotions</div>
-        <div class="channel-text">I can feel your emotions or those of your higher self strongly in my body — your truth coming through me.</div>
+        <div class="channel-text">I can feel your emotions or those of your higher self strongly in my body. Your truth coming through me.</div>
       </div>
       <div class="channel-card">
         <div class="channel-num">04</div>
         <div class="channel-title">Sensations</div>
-        <div class="channel-text">I can feel physical sensations — contractions, expansions, tightness, opening — each carrying a specific meaning I translate for you in the moment.</div>
+        <div class="channel-text">I can feel physical sensations: contractions, expansions, tightness, opening. Each carrying a specific meaning I translate for you in the moment.</div>
       </div>
     </div>
   </div>
@@ -1590,7 +1678,7 @@
         <ul class="q-items">
           <li class="q-item"><span class="q-item-star">✦</span><span>"I keep attracting the same dynamic. Why does this keep happening to me?"</span></li>
           <li class="q-item"><span class="q-item-star">✦</span><span>"I'm at a crossroads with someone I love. What do I actually need here?"</span></li>
-          <li class="q-item"><span class="q-item-star">✦</span><span>"How do I truly feel about this relationship — underneath all the noise?"</span></li>
+          <li class="q-item"><span class="q-item-star">✦</span><span>"How do I truly feel about this relationship, underneath all the noise?"</span></li>
         </ul>
       </div>
       <div class="q-card">
@@ -1634,9 +1722,9 @@
     <h2 class="section-title">A few things worth knowing.</h2>
     <div class="section-divider"></div>
     <div class="not-is-col">
-        <p>I don't communicate with <strong>people who have passed.</strong> I'm a psychic channel, not a medium. If a specific message is meant to come through from a loved one who has passed, it surely can — however I am not specialised in mediumship readings if this is the main goal of your reading.</p>
+        <p>I don't communicate with <strong>people who have passed.</strong> I'm a psychic channel, not a medium. If a specific message is meant to come through from a loved one who has passed, it surely can. However, I am not specialised in mediumship readings if this is the main goal of your reading.</p>
         <p>I don't channel <strong>other living people</strong> without their consent. If you're hoping to find out how a specific person feels about you, this isn't the right fit. I can however tell you how your higher self feels about this person, truly.</p>
-        <p>I don't predict the future in absolute terms — no one can — but <strong>indications of what lies ahead</strong> can sometimes be seen from where you currently stand. I can see how your future may look if you stay aligned with your purpose and the path you're on right now. That said, you always have <strong>free will</strong> — you can change the trajectory of your life at any moment. What I can possibly offer — if this is something you are meant to know — is a picture of where you're headed from here, so you can choose consciously.</p>
+        <p>I don't predict the future in absolute terms. No one can. But <strong>indications of what lies ahead</strong> can sometimes be seen from where you currently stand. I can see how your future may look if you stay aligned with your purpose and the path you're on right now. That said, you always have <strong>free will</strong>. You can change the trajectory of your life at any moment. What I can possibly offer, if this is something you are meant to know, is a picture of where you're headed from here, so you can choose consciously.</p>
       </div>
     </div>
   </div>
@@ -1704,7 +1792,7 @@
       <div class="session-card">
         <div class="session-duration">Single session</div>
         <div class="session-title">Photo Reading</div>
-        <div class="session-desc">Send me a photo and receive channelled guidance from your higher self and guides — delivered as a 10 to 15 minute voice message via WhatsApp. A gentle, personal entry point into this work.</div>
+        <div class="session-desc">Send me a photo and receive channelled guidance from your higher self and guides, delivered as a 10 to 15 minute voice message via WhatsApp. A gentle, personal entry point into this work.</div>
         <ul class="session-includes">
           <li class="session-include"><span class="session-include-star">✦</span>Send a photo of yourself via WhatsApp</li>
           <li class="session-include"><span class="session-include-star">✦</span>Ask a specific question or simply let me receive whatever comes through</li>
@@ -1723,7 +1811,7 @@
         <div class="session-desc">A focused session where I connect with your higher self, spirit guides, and the universe to bring through the guidance that's specifically meant for you right now.</div>
         <ul class="session-includes">
           <li class="session-include"><span class="session-include-star">✦</span>Online via video call or in person</li>
-          <li class="session-include"><span class="session-include-star">✦</span>Bring your questions — we cover as many as we can</li>
+          <li class="session-include"><span class="session-include-star">✦</span>Bring your questions. We cover as many as we can.</li>
           <li class="session-include"><span class="session-include-star">✦</span>Recording welcome & encouraged</li>
           <li class="session-include"><span class="session-include-star">✦</span>Higher self, spirit guides & universe</li>
         </ul>
@@ -1735,7 +1823,7 @@
       <div class="session-card">
         <div class="session-duration">60 minutes · Online or in person</div>
         <div class="session-title">60-Min Reading</div>
-        <div class="session-desc">A longer, deeper session for those with more to explore — more questions, more time in the channel, more space for what needs to come through. The channel opens wider the longer we work together.</div>
+        <div class="session-desc">A longer, deeper session for those with more to explore. More questions, more time in the channel, more space for what needs to come through. The channel opens wider the longer we work together.</div>
         <ul class="session-includes">
           <li class="session-include"><span class="session-include-star">✦</span>Online via video call or in person</li>
           <li class="session-include"><span class="session-include-star">✦</span>More time, more questions, deeper guidance</li>
@@ -1779,9 +1867,9 @@
       <h2 class="section-title">I help you hear what your soul<br><em>has been trying to tell you.</em></h2>
       <div class="section-divider"></div>
       <div class="about-body">
-        <p>I'm Nicole — a psychic channel. I didn't grow up calling myself psychic. I grew up calling it a feeling. An instinct. A knowing I couldn't always explain but couldn't ignore either.</p>
-        <p>My background in depth psychology gave me a framework for understanding the inner world — how we work, why we make the choices we make, what drives us beneath the surface. That foundation never left me. What I do now sits right at the intersection of the psychological and the spiritual.</p>
-        <p>In the summer of 2025, I walked into a workshop near my home that claimed to teach channelling in 90 minutes. I went out of curiosity. Within that session, I channelled for the stranger sitting next to me — and accurately remote-viewed his apartment in detail. In that moment I knew: there is something here, and it's real.</p>
+        <p>I'm Nicole, a psychic channel. I didn't grow up calling myself psychic. I grew up calling it a feeling. An instinct. A knowing I couldn't always explain but couldn't ignore either.</p>
+        <p>My background in depth psychology gave me a framework for understanding the inner world: how we work, why we make the choices we make, what drives us beneath the surface. That foundation never left me. What I do now sits right at the intersection of the psychological and the spiritual.</p>
+        <p>In the summer of 2025, I walked into a workshop near my home that claimed to teach channelling in 90 minutes. I went out of curiosity. Within that session, I channelled for the stranger sitting next to me and accurately remote-viewed his apartment in detail. In that moment I knew: there is something here, and it's real.</p>
         <p>That experience led me to a five-month training course with a lifelong psychic medium. I graduated at the end of 2025, having completed numerous readings throughout my training and beyond. At the start of 2026 I opened my practice — and I haven't looked back.</p>
         <p>I love the process of channelling. It gives me deep joy — and I always leave a session feeling full, not depleted. Seeing how grateful people are, witnessing the moment something lands for them, being reminded again and again that we are all connected on an energetic level that most of us can't fully see — it still blows my mind every time. I am still exploring this world myself, and I am in awe every single time I do a reading. That sense of wonder hasn't left me, and I hope it never does.</p>
       </div>
@@ -2081,8 +2169,30 @@
     }));
   }
 
+  // ── HAMBURGER MENU ──
+  const hamburger = document.getElementById('nav-hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const closeBtn = document.getElementById('mobile-menu-close');
+  const mobileLinks = document.querySelectorAll('.mobile-menu-link');
+
+  if (hamburger) hamburger.addEventListener('click', () => mobileMenu.classList.add('open'));
+  if (closeBtn) closeBtn.addEventListener('click', () => mobileMenu.classList.remove('open'));
+  mobileLinks.forEach(link => link.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
   load();
 </script>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <button class="mobile-menu-close" id="mobile-menu-close">✕</button>
+    <ul>
+      <li><a href="#about" class="mobile-menu-link">About</a></li>
+      <li><a href="#how" class="mobile-menu-link">How it works</a></li>
+      <li><a href="#sessions" class="mobile-menu-link">Sessions</a></li>
+      <li><a href="#testimonials" class="mobile-menu-link">Reviews</a></li>
+      <li><a href="https://wa.me/4915221387735" target="_blank" class="mobile-menu-link mobile-menu-cta">Book a reading</a></li>
+    </ul>
+  </div>
 
   <!-- FLOATING WHATSAPP -->
   <a href="https://wa.me/4915221387735" target="_blank" id="wa-btn" style="
