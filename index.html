@@ -2107,5 +2107,275 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     Have a question?
   </a>
+<script>
+  // ── HAMBURGER MENU ──
+  const hamburger = document.getElementById('nav-hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const closeBtn = document.getElementById('mobile-menu-close');
+  const mobileLinks = document.querySelectorAll('.mobile-menu-link');
+
+  if (hamburger) hamburger.addEventListener('click', () => mobileMenu.classList.add('open'));
+  if (closeBtn) closeBtn.addEventListener('click', () => mobileMenu.classList.remove('open'));
+  mobileLinks.forEach(link => link.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
+  // ── TESTIMONIALS WIDGET ──
+  const ADMIN_PW = 'nicole2024';
+  const SUPABASE_URL = 'https://huozxsjhkzvmxknhljmp.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1b3p4c2poa3p2bXhrbmhsam1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNTA0MDYsImV4cCI6MjA5MTcyNjQwNn0.JHVFHwvKJUFAINR1nFNaTnHhaOo5byd-ZnuoV9olEHE';
+  const VISIBLE_COUNT = 3;
+  const CARDS_PER_PAGE = 3;
+  let carouselPage = 0;
+
+  let state = { view: 'public', testimonials: [], submitted: false, adminUnlocked: false, adminInput: '', adminError: '', deletingId: null, showAll: false, loading: true, expanded: null };
+
+  async function sbFetch(method, path, body) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+      method,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : ''
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (method === 'DELETE') return null;
+    return res.json();
+  }
+
+  async function load() {
+    try {
+      const data = await sbFetch('GET', 'reviews?select=*&order=created_at.desc', null);
+      state.testimonials = Array.isArray(data) ? data.map(r => ({
+        id: r.id, name: r.name, text: r.text, email: r.email, consented: r.consented, date: r.date
+      })) : [];
+    } catch(e) {
+      state.testimonials = [];
+    }
+    state.loading = false;
+    render();
+  }
+
+  async function save(review) {
+    try {
+      const data = await sbFetch('POST', 'reviews', {
+        name: review.name, text: review.text,
+        email: review.email || null, consented: review.consented || false, date: review.date
+      });
+      return Array.isArray(data) ? data[0] : null;
+    } catch(e) { return null; }
+  }
+
+  async function deleteReview(id) {
+    try { await sbFetch('DELETE', 'reviews?id=eq.' + encodeURIComponent(id), null); } catch(e) {}
+  }
+
+  async function subscribeToMailchimp(email, name) {
+    return;
+  }
+
+  function render() {
+    const el = document.getElementById('testimonials-widget');
+    if (!el) return;
+    const views = { public: renderPublic, submit: renderSubmit, admin: renderAdmin };
+    el.innerHTML = views[state.view]();
+    attachEvents();
+  }
+
+  function renderNav() {
+    return `<div class="t-nav">
+      <button class="t-nav-btn ${state.view==='public'?'active':''}" data-view="public">Reviews</button>
+      <button class="t-nav-btn ${state.view==='submit'?'active':''}" data-view="submit">Leave a review</button>
+      <button class="t-nav-btn ${state.view==='admin'?'active':''}" data-view="admin" style="display:none;">Admin</button>
+    </div>`;
+  }
+
+  function renderPublic() {
+    if (state.loading) return renderNav() + '<div class="t-empty" style="color:var(--light-mid);">Loading reviews...</div>';
+    const all = state.testimonials;
+    if (all.length === 0) return renderNav() + '<div class="t-empty">No reviews yet. Be the first to share your experience.</div>';
+
+    const totalPages = Math.ceil(all.length / CARDS_PER_PAGE);
+    const start = carouselPage * CARDS_PER_PAGE;
+    const visible = all.slice(start, start + CARDS_PER_PAGE);
+
+    const cards = visible.map(t => {
+      const isExpanded = state.expanded === t.id;
+      const isLong = t.text.length > 180;
+      const displayText = isLong && !isExpanded ? t.text.slice(0, 180) + '...' : t.text;
+      return `
+        <div class="t-carousel-card">
+          <div class="t-text">"${displayText}"</div>
+          ${isLong ? `<button class="t-expand-btn" data-expand="${t.id}">${isExpanded ? 'Read less' : 'Read more'}</button>` : ''}
+          <div class="t-footer" style="margin-top:auto;">
+            <div class="t-line"></div>
+            <span class="t-name">${t.name}</span>
+            <span class="t-date">${t.date}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    const nav = totalPages > 1 ? `
+      <div class="t-carousel-nav">
+        <button class="t-carousel-btn" id="t-prev" ${carouselPage === 0 ? 'disabled' : ''}>←</button>
+        <span class="t-carousel-dots">
+          ${Array.from({length: totalPages}, (_, i) => `<span class="t-dot ${i === carouselPage ? 'active' : ''}" data-page="${i}"></span>`).join('')}
+        </span>
+        <button class="t-carousel-btn" id="t-next" ${carouselPage >= totalPages - 1 ? 'disabled' : ''}>→</button>
+      </div>` : '';
+
+    return renderNav() + `<div class="t-carousel">${cards}</div>${nav}`;
+  }
+
+  function renderSubmit() {
+    if (state.submitted) return renderNav() + `
+      <div class="t-success">
+        <div class="t-success-icon">✦</div>
+        <div class="t-success-title">Thank you</div>
+        <p class="t-success-text">Your words have been received.<br>They mean more than you know.</p>
+        <button class="t-back" id="t-back-btn">View all reviews</button>
+      </div>`;
+    return renderNav() + `
+      <div class="t-form-wrap">
+        <div class="t-form-title">Share your experience</div>
+        <p class="t-form-sub">Your words help others find their way here.</p>
+        <div class="t-field">
+          <label class="t-label">Your name</label>
+          <input class="t-input" id="t-name" placeholder="e.g. Sofia M." value="">
+        </div>
+        <div class="t-field">
+          <label class="t-label">Your review</label>
+          <textarea class="t-textarea" id="t-review" placeholder="Share what your session meant to you..."></textarea>
+        </div>
+        <div class="t-field">
+          <label class="t-label">Your email <span style="font-weight:300; letter-spacing:1px; text-transform:none; font-size:10px; color:var(--sand-dark);">(optional)</span></label>
+          <input class="t-input" id="t-email" type="email" placeholder="your@email.com">
+        </div>
+        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:8px;">
+          <input type="checkbox" id="t-consent" style="margin-top:3px; accent-color:var(--terra); flex-shrink:0; cursor:pointer;">
+          <label for="t-consent" style="font-size:11px; font-weight:300; color:var(--mid); line-height:1.6; cursor:pointer;">I'd like to receive updates, offerings, and occasional guidance from Nicole. I can unsubscribe at any time.</label>
+        </div>
+        <button class="t-submit" id="t-submit-btn">Submit review</button>
+      </div>`;
+  }
+
+  function renderAdmin() {
+    if (!state.adminUnlocked) return renderNav() + `
+      <div class="t-admin-login">
+        <div class="t-admin-title">Admin access</div>
+        <div class="t-field">
+          <label class="t-label">Password</label>
+          <input class="t-input" id="t-pw" type="password" placeholder="Enter password">
+          ${state.adminError ? `<div class="t-admin-error">${state.adminError}</div>` : ''}
+        </div>
+        <button class="t-submit" id="t-login-btn">Enter</button>
+      </div>`;
+    const cards = state.testimonials.map(t => `
+      <div class="t-admin-card ${state.deletingId===t.id?'deleting':''}" data-id="${t.id}">
+        <div class="t-admin-content">
+          <div class="t-admin-name">${t.name}</div>
+          ${t.email ? `<div style="font-size:10px; font-weight:300; color:var(--terra); letter-spacing:1px; margin-bottom:4px;">✉ ${t.email} ${t.consented ? '· subscribed' : '· no consent'}</div>` : ''}
+          <div class="t-admin-text">"${t.text}"</div>
+          <div class="t-admin-date">${t.date}</div>
+        </div>
+        <button class="t-delete" data-del="${t.id}">Delete</button>
+      </div>`).join('') || `<div class="t-empty">No reviews yet.</div>`;
+    return renderNav() + `
+      <div class="t-admin-wrap">
+        <div class="t-admin-header">
+          <div>
+            <div class="t-admin-header-title">Manage reviews</div>
+            <div class="t-count">${state.testimonials.length} total</div>
+          </div>
+          <button class="t-logout" id="t-logout-btn">Lock</button>
+        </div>
+        ${cards}
+      </div>`;
+  }
+
+  function attachEvents() {
+    document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { state.view = b.dataset.view; state.submitted = false; render(); }));
+
+    const sub = document.getElementById('t-submit-btn');
+    if (sub) sub.addEventListener('click', async () => {
+      const n = document.getElementById('t-name').value.trim();
+      const t = document.getElementById('t-review').value.trim();
+      const email = document.getElementById('t-email') ? document.getElementById('t-email').value.trim() : '';
+      const consent = document.getElementById('t-consent') ? document.getElementById('t-consent').checked : false;
+      if (!n || !t) return;
+      sub.disabled = true;
+      sub.textContent = 'Submitting...';
+      const date = new Date().toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+      const saved = await save({ name: n, text: t, email, consented: consent, date });
+      if (saved) { state.testimonials.unshift({ id: saved.id, name: n, text: t, email, consented: consent, date }); }
+      if (email && consent) { await subscribeToMailchimp(email, n); }
+      state.submitted = true; render();
+    });
+
+    const back = document.getElementById('t-back-btn');
+    if (back) back.addEventListener('click', () => { state.view = 'public'; state.submitted = false; render(); });
+
+    const login = document.getElementById('t-login-btn');
+    if (login) login.addEventListener('click', () => {
+      const pw = document.getElementById('t-pw').value;
+      if (pw === ADMIN_PW) { state.adminUnlocked = true; state.adminError = ''; }
+      else { state.adminError = 'Incorrect password.'; }
+      render();
+    });
+
+    const pwInput = document.getElementById('t-pw');
+    if (pwInput) pwInput.addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('t-login-btn')?.click(); });
+
+    const logout = document.getElementById('t-logout-btn');
+    if (logout) logout.addEventListener('click', () => { state.adminUnlocked = false; render(); });
+
+    const prevBtn = document.getElementById('t-prev');
+    if (prevBtn) prevBtn.addEventListener('click', () => { if (carouselPage > 0) { carouselPage--; state.expanded = null; render(); } });
+
+    const nextBtn = document.getElementById('t-next');
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      const total = Math.ceil(state.testimonials.length / CARDS_PER_PAGE);
+      if (carouselPage < total - 1) { carouselPage++; state.expanded = null; render(); }
+    });
+
+    document.querySelectorAll('.t-dot').forEach(dot => dot.addEventListener('click', () => {
+      carouselPage = parseInt(dot.dataset.page); state.expanded = null; render();
+    }));
+
+    document.querySelectorAll('.t-expand-btn').forEach(btn => btn.addEventListener('click', () => {
+      const id = btn.dataset.expand;
+      state.expanded = state.expanded === id ? null : id;
+      render();
+    }));
+
+    document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+      const id = b.dataset.del;
+      state.deletingId = id;
+      render();
+      setTimeout(async () => {
+        await deleteReview(id);
+        state.testimonials = state.testimonials.filter(t => String(t.id) !== String(id));
+        state.deletingId = null;
+        render();
+      }, 400);
+    }));
+
+    // Triple click star to open admin
+    let starClickCount = 0;
+    let starClickTimer = null;
+    const heading = document.querySelector('.testimonials-section .eyebrow-star');
+    if (heading) {
+      heading.style.cursor = 'default';
+      heading.addEventListener('click', () => {
+        starClickCount++;
+        clearTimeout(starClickTimer);
+        starClickTimer = setTimeout(() => { starClickCount = 0; }, 1000);
+        if (starClickCount >= 3) { starClickCount = 0; state.view = 'admin'; render(); }
+      });
+    }
+  }
+
+  load();
+</script>
 </body>
 </html>
