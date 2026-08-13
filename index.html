@@ -2200,7 +2200,7 @@
     const visible = all.slice(start, start + CARDS_PER_PAGE);
 
     const cards = visible.map(t => {
-      const isExpanded = state.expanded === t.id;
+      const isExpanded = String(state.expanded) === String(t.id);
       const isLong = t.text.length > 180;
       const displayText = isLong && !isExpanded ? t.text.slice(0, 180) + '...' : t.text;
       return `
@@ -2343,8 +2343,8 @@
     }));
 
     document.querySelectorAll('.t-expand-btn').forEach(btn => btn.addEventListener('click', () => {
-      const id = btn.dataset.expand;
-      state.expanded = state.expanded === id ? null : id;
+      const id = String(btn.dataset.expand);
+      state.expanded = String(state.expanded) === id ? null : id;
       render();
     }));
 
