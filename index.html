@@ -2126,7 +2126,7 @@
   const CARDS_PER_PAGE = 3;
   let carouselPage = 0;
 
-  let state = { view: 'public', testimonials: [], submitted: false, adminUnlocked: false, adminInput: '', adminError: '', deletingId: null, showAll: false, loading: true, expanded: null };
+  let state = { view: 'public', testimonials: [], submitted: false, adminUnlocked: false, adminInput: '', adminError: '', deletingId: null, showAll: false, loading: true, expanded: null, expandAll: false };
 
   async function sbFetch(method, path, body) {
     const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
@@ -2200,13 +2200,13 @@
     const visible = all.slice(start, start + CARDS_PER_PAGE);
 
     const cards = visible.map(t => {
-      const isExpanded = String(state.expanded) === String(t.id);
-      const isLong = t.text.length > 180;
-      const displayText = isLong && !isExpanded ? t.text.slice(0, 180) + '...' : t.text;
+      const isExpanded = state.expandAll || String(state.expanded) === String(t.id);
+      const isLong = t.text.length > 280;
+      const displayText = isLong && !isExpanded ? t.text.slice(0, 280) + '...' : t.text;
       return `
         <div class="t-carousel-card">
           <div class="t-text">"${displayText}"</div>
-          ${isLong ? `<button class="t-expand-btn" data-expand="${t.id}">${isExpanded ? 'Read less' : 'Read more'}</button>` : ''}
+          ${isLong ? `<button class="t-expand-btn" data-expand="${t.id}">${state.expandAll ? 'Read less' : 'Read more'}</button>` : ''}
           <div class="t-footer" style="margin-top:auto;">
             <div class="t-line"></div>
             <span class="t-name">${t.name}</span>
@@ -2330,12 +2330,12 @@
     if (logout) logout.addEventListener('click', () => { state.adminUnlocked = false; render(); });
 
     const prevBtn = document.getElementById('t-prev');
-    if (prevBtn) prevBtn.addEventListener('click', () => { if (carouselPage > 0) { carouselPage--; state.expanded = null; render(); } });
+    if (prevBtn) prevBtn.addEventListener('click', () => { if (carouselPage > 0) { carouselPage--; state.expanded = null; state.expandAll = false; render(); } });
 
     const nextBtn = document.getElementById('t-next');
     if (nextBtn) nextBtn.addEventListener('click', () => {
       const total = Math.ceil(state.testimonials.length / CARDS_PER_PAGE);
-      if (carouselPage < total - 1) { carouselPage++; state.expanded = null; render(); }
+      if (carouselPage < total - 1) { carouselPage++; state.expanded = null; state.expandAll = false; render(); }
     });
 
     document.querySelectorAll('.t-dot').forEach(dot => dot.addEventListener('click', () => {
@@ -2348,8 +2348,7 @@
       carousel.addEventListener('click', e => {
         const btn = e.target.closest('.t-expand-btn');
         if (btn) {
-          const id = String(btn.dataset.expand);
-          state.expanded = String(state.expanded) === id ? null : id;
+          state.expandAll = !state.expandAll;
           render();
         }
       });
