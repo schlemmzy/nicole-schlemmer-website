@@ -2342,11 +2342,18 @@
       carouselPage = parseInt(dot.dataset.page); state.expanded = null; render();
     }));
 
-    document.querySelectorAll('.t-expand-btn').forEach(btn => btn.addEventListener('click', () => {
-      const id = String(btn.dataset.expand);
-      state.expanded = String(state.expanded) === id ? null : id;
-      render();
-    }));
+    const carousel = document.querySelector('.t-carousel');
+    if (carousel && !carousel.dataset.bound) {
+      carousel.dataset.bound = '1';
+      carousel.addEventListener('click', e => {
+        const btn = e.target.closest('.t-expand-btn');
+        if (btn) {
+          const id = String(btn.dataset.expand);
+          state.expanded = String(state.expanded) === id ? null : id;
+          render();
+        }
+      });
+    }
 
     document.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
       const id = b.dataset.del;
